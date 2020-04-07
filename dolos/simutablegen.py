@@ -24,11 +24,14 @@ Generator algo for SimuTable
 import io
 import pyarrow as pa
 
-from artemis.logger import Logger
-from artemis.decorators import iterable
-from artemis.generators.common import GeneratorBase
 from artemis_format.pymodels.cronus_pb2 import FileObjectInfo
 from artemis_format.pymodels.table_pb2 import Table
+
+from artemis_base.utils.logger import Logger
+from artemis_base.utils.decorators import iterable
+
+from artemis.generators.common import GeneratorBase
+
 from dolos.simutable.synthesizer import Synthesizer
 
 

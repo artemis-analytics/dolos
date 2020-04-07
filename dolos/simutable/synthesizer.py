@@ -25,7 +25,8 @@ from pprint import pformat
 from faker import Faker
 from artemis_externals.physt.histogram1d import Histogram1D
 
-from artemis.logger import Logger
+from artemis_base.utils.logger import Logger
+
 from dolos.simutable.loader import PROVIDERS
 from dolos.simutable.febrlgen import Modifier
 

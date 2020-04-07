@@ -105,7 +105,7 @@ import string
 import logging
 from pprint import pformat
 
-from artemis.logger import Logger
+from artemis_base.utils.logger import Logger
 
 
 @Logger.logged
