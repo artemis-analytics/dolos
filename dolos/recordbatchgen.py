@@ -22,21 +22,52 @@ Generator algo for SimuTable
 
 """
 import io
+import importlib
+import numbers
+from pprint import pformat
+import numpy as np
 import pyarrow as pa
 
 from artemis_format.pymodels.cronus_pb2 import FileObjectInfo
 from artemis_format.pymodels.table_pb2 import Table
+from artemis_format.pymodels.configuration_pb2 import Module as Algo_pb
 
 from artemis_base.utils.logger import Logger
 from artemis_base.utils.decorators import iterable
+from artemis_base.core.properties import Properties
 
-from artemis.generators.common import GeneratorBase
 
 from dolos.simutable.synthesizer import Synthesizer
 
 
+def check_random_state(seed):
+    """
+    Turn seed into a numpy.random.RandomState instance
+    Ensures if using multiple generators in code we avoid
+    repeatability problems
+
+    https://scikit-learn.org/stable/developers/utilities.html#validation-tools
+
+    Parameters
+
+    seed: None | int | instance of RandomState
+
+    """
+    if seed is None or seed is np.random:
+        return np.random.mtrand._rand  # returns numpy singleton RandomState
+    if isinstance(seed, (numbers.Integral, np.integer)):
+        return np.random.RandomState(seed)
+    if isinstance(seed, np.random.RandomState):
+        return seed
+    raise ValueError(
+        "%r cannot be used to seed a \
+        numpy.random.RandomState instance "
+        % seed
+    )
+
+
 @iterable
-class SimuTableGenOptions:
+class RecordBatchGenOptions:
     nbatches = 1
     nsamples = 1
     num_rows = 10
@@ -46,16 +77,32 @@ class SimuTableGenOptions:
 
 
 @Logger.logged
-class SimuTableGen(GeneratorBase):
+class RecordBatchGen:
     """
     """
 
     def __init__(self, name, **kwargs):
-        print("Initialize SimuTableGen")
-        options = dict(SimuTableGenOptions())
+        Logger.configure(self, **kwargs)
+        self.__name = name
+        self.properties = Properties()
+        options = dict(RecordBatchGenOptions())
         options.update(kwargs)
+        for key in options:
+            self.properties.add_property(key, options[key])
 
-        super().__init__(name, **options)
+        if hasattr(self.properties, "seed"):
+            self.rnd = check_random_state(seed=self.properties.seed)
+        else:
+            self.rnd = check_random_state(seed=None)
+
+        if hasattr(self.properties, "nbatches"):
+            self._nbatches = self.properties.nbatches
+            self._batch_iter = iter(range(self.properties.nbatches))
+        else:
+            self.__logger.warning("Number of batches not defined")
+
+        self._batchidx = 0
+
         self.table_id = self.properties.table_id
         self.table = Table()
         self.num_rows = self.properties.num_rows
@@ -107,6 +154,71 @@ class SimuTableGen(GeneratorBase):
         print("Initialize SimuTableGen")
 
     @property
+    def random_state(self):
+        return self._builtin_generator.rnd
+
+    @property
+    def name(self):
+        """
+        Algorithm name
+        """
+        return self.__name
+
+    def reset(self):
+        if hasattr(self, "_nbatches"):
+            self._batch_iter = iter(range(self._nbatches))
+        else:
+            self.__logger.warning("Override reset in concrete class")
+
+    def to_msg(self):
+        message = Algo_pb()
+        message.name = self.name
+        message.klass = self.__class__.__name__
+        message.module = self.__module__
+        message.properties.CopyFrom(self.properties.to_msg())
+        return message
+
+    @staticmethod
+    def from_msg(logger, msg):
+        logger.info("Loading Algo from msg %s", msg.name)
+        try:
+            module = importlib.import_module(msg.module)
+        except ImportError:
+            logger.error("Unable to load module %s", msg.module)
+            raise
+        except Exception as e:
+            logger.error("Unknow error loading module: %s" % e)
+            raise
+        try:
+            class_ = getattr(module, msg.klass)
+        except AttributeError:
+            logger.error("%s: missing attribute %s" % (msg.name, msg.klass))
+            raise
+        except Exception as e:
+            logger.error("Reason: %s" % e)
+            raise
+
+        properties = Properties.from_msg(msg.properties)
+        logger.debug(pformat(properties))
+
+        # Update the logging level of
+        # algorithms if loglevel not set
+        # Ensures user-defined algos get the artemis level logging
+        if "loglevel" not in properties:
+            properties["loglevel"] = logger.getEffectiveLevel()
+
+        try:
+            instance = class_(msg.name, **properties)
+        except AttributeError:
+            logger.error("%s: missing attribute %s" % (msg.name, "properties"))
+            raise
+        except Exception as e:
+            logger.error("%s: Cannot initialize %s" % e)
+            raise
+
+        return instance
+
+    @property
     def num_batches(self):
         return self._nbatches
 
@@ -114,9 +226,11 @@ class SimuTableGen(GeneratorBase):
     def num_batches(self, n):
         self._nbatches = n
 
+    def __iter__(self):
+        return self
+
     def initialize(self):
-        self.__logger.info("Initialize SimuTableGenerator")
-        self.gate.store.get(self.table_id, self.table)
+        self.__logger.info("RecordBatchGenerator")
         self.num_cols = len(self.table.info.schema.info.fields)
         names = []
         for field in self.table.info.schema.info.fields:
@@ -298,26 +412,6 @@ class SimuTableGen(GeneratorBase):
         next(self._batch_iter)
         self.__logger.info("%s: Generating datum " % (self.__class__.__name__))
         data = self.write_batch()
-        self.__logger.debug("%s: type data: %s" % (self.__class__.__name__, type(data)))
-        fileinfo = FileObjectInfo()
-        fileinfo.type = 1
-        fileinfo.partition = self.name
-        job_id = f"{self.gate.meta.job_id}_batch_{self._batchidx}"
-        ds_id = self.gate.meta.parentset_id
-        id_ = self.gate.store.register_content(
-            data, fileinfo, dataset_id=ds_id, partition_key=self.name, job_id=job_id
-        ).uuid
-        try:
-            self.gate.store.put(id_, data)
-        except IOError:
-            self.__logger.error("Unable to write batch to store")
-            raise
-        except ValueError:
-            self.__logger.error("Unable to find batch key in store")
-            raise
-        except Exception:
-            self.__logger.error("Unknown error writing batch to store")
-            raise
 
         self._batchidx += 1
-        return id_
+        return data
