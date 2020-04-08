@@ -27,7 +27,7 @@ import uuid
 import logging
 
 # from collections import OrderedDict
-from artemis.meta.cronus import BaseObjectStore
+from cronus.core.cronus import BaseObjectStore
 from artemis_format.pymodels.table_pb2 import Table
 from artemis_format.pymodels.cronus_pb2 import TableObjectInfo
 from dolos.recordbatchgen import RecordBatchGen
