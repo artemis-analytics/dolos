@@ -23,7 +23,9 @@ import logging
 
 from pprint import pformat
 from faker import Faker
-from artemis_externals.physt.histogram1d import Histogram1D
+
+#
+# from artemis_externals.physt.histogram1d import Histogram1D
 
 from artemis_base.utils.logger import Logger
 
@@ -91,7 +93,7 @@ class Synthesizer(object):
 
         # Generator counters/stats
         self.stats = {"Total": 0, "Original": 0, "Duplicate": 0}
-        self.h_dupdist = Histogram1D(range(10))
+        # self.h_dupdist = Histogram1D(range(10))
 
         if model.info.aux.HasField("duplicate"):
             self.duplicate = True
@@ -323,7 +325,8 @@ class Synthesizer(object):
                     self.__logger.debug(
                         "Event %d duplicates %d", (self.stats["Total"], self.__dupcntr)
                     )
-                    self.h_dupdist.fill(self.__dupcntr)
+                    #
+                    # self.h_dupdist.fill(self.__dupcntr)
                     # clear cache
                     self.reset_original()
                     darr = self.generate_original()
@@ -353,7 +356,7 @@ class Synthesizer(object):
         self.__logger.info("Total records: %d" % self.stats["Total"])
         self.__logger.info("Original records: %d" % self.stats["Original"])
         self.__logger.info("Duplicate records: %d" % self.stats["Duplicate"])
-        self.__logger.info(pformat(self.h_dupdist.to_dict()))
+        # self.__logger.info(pformat(self.h_dupdist.to_dict()))
         if self.duplicate is True:
             self.mod.get_stats()
         self.__logger.info("=============================================")

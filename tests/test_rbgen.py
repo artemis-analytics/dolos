@@ -25,9 +25,10 @@ import unittest
 import tempfile
 import uuid
 import logging
+import io
+import csv
 
 # from collections import OrderedDict
-from cronus.core.cronus import BaseObjectStore
 from artemis_format.pymodels.table_pb2 import Table
 from artemis_format.pymodels.cronus_pb2 import TableObjectInfo
 from dolos.recordbatchgen import RecordBatchGen
@@ -42,45 +43,38 @@ class RBGenTestCase(unittest.TestCase):
         print("Beginning new TestCase %s" % self._testMethodName)
         print("================================================")
 
-    def test_rbgen(self):
-        with tempfile.TemporaryDirectory() as dirpath:
-            store = BaseObjectStore(dirpath, "artemis")
+    def test_rbgen_csv(self):
 
-            g_dataset = store.register_dataset()
-            store.new_partition(g_dataset.uuid, "generator")
-            job_id = store.new_job(g_dataset.uuid)
+        # define the schema for the data
+        g_table = Table()
+        g_table.name = "EvolveModel"
+        g_table.uuid = str(uuid.uuid4())
+        schema = g_table.info.schema.info
+        field = schema.fields.add()
+        field.name = "Name"
+        field.info.type = "String"
+        field.info.length = 10
+        field.info.aux.generator.name = "name"
+        g_table_msg = g_table.SerializeToString()
 
-            # define the schema for the data
-            g_table = Table()
-            g_table.name = "EvolveModel"
-            g_table.uuid = str(uuid.uuid4())
-            schema = g_table.info.schema.info
-            field = schema.fields.add()
-            field.name = "Name"
-            field.info.type = "String"
-            field.info.length = 10
-            field.info.aux.generator.name = "name"
+        generator = RecordBatchGen(
+            "generator",
+            nbatches=1,
+            num_rows=10000,
+            file_type=1,  # Encodes the data as csv
+            table_id=g_table.uuid,
+            table_msg=g_table_msg,
+        )
 
-            tinfo = TableObjectInfo()
-            store.register_content(
-                g_table,
-                tinfo,
-                dataset_id=g_dataset.uuid,
-                job_id=job_id,
-                partition_key="generator",
-            )
-
-            generator = RecordBatchGen(
-                "generator",
-                nbatches=1,
-                num_rows=10000,
-                file_type=1,
-                table_id=g_table.uuid,
-            )
-
-            generator.initialize()
-            for batch in generator:
-                print(batch)
+        generator.initialize()
+        # Data returned as a pyarrow buffer
+        # Convert to raw python bytes objects
+        # Use io wrapper and read as csv
+        for batch in generator:
+            data = batch.to_pybytes()
+            with io.TextIOWrapper(io.BytesIO(data)) as textio:
+                for row in csv.reader(textio):
+                    print(row)
 
 
 if __name__ == "__main__":

@@ -104,7 +104,13 @@ class RecordBatchGen:
         self._batchidx = 0
 
         self.table_id = self.properties.table_id
+
         self.table = Table()
+        if hasattr(self.properties, "table_msg"):
+            self.table.ParseFromString(self.properties.table_msg)
+        else:
+            self.__logger.warning("No table message to deserialize")
+
         self.num_rows = self.properties.num_rows
         self.linesep = self.properties.linesep
         # self.header = self.properties.header
@@ -151,7 +157,7 @@ class RecordBatchGen:
         self.__logger.info(
             "%s properties: %s", self.__class__.__name__, self.properties
         )
-        print("Initialize SimuTableGen")
+        print("Initialize RecordBatchGen")
 
     @property
     def random_state(self):
@@ -263,27 +269,6 @@ class RecordBatchGen:
                 raise
             except Exception:
                 self.__logger.error("Unknown error in chunk")
-
-    def sampler(self):
-        while self.nsamples > 0:
-            self.__logger.info("%s: Generating datum " % (self.__class__.__name__))
-            data = self.write_batch()
-            self.__logger.debug(
-                "%s: type data: %s" % (self.__class__.__name__, type(data))
-            )
-            fileinfo = FileObjectInfo()
-            fileinfo.type = 1
-            fileinfo.partition = self.name
-            job_id = f"{self.gate.meta.job_id}_sample_{self.nsamples}"
-            ds_id = self.gate.meta.parentset_id
-            id_ = self.gate.store.register_content(
-                data, fileinfo, dataset_id=ds_id, partition_key=self.name, job_id=job_id
-            ).uuid
-            buf = pa.py_buffer(data)
-            self.gate.store.put(id_, buf)
-            yield id_
-            self.nsamples -= 1
-            self.__logger.debug("Batch %i", self.nsamples)
 
     def fwf_encode_row(self, row):
         record = ""
