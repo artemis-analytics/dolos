@@ -34,6 +34,7 @@ from dolos.simutable.loader import PROVIDERS
 from dolos.simutable.febrlgen import Modifier
 import ArtemisFaker
 
+
 @Logger.logged
 class Synthesizer(object):
     """
@@ -57,13 +58,13 @@ class Synthesizer(object):
         requires class model name
         """
         self.provider_kinds = ["function", "class"]
-
+        self.inert_providers = []
+        
         self.__logger.info("Synthesizer init")
         self.__logger.debug("DEBUG Message")
 
-        self.fake = Faker(local) # POE [*]
+        self.fake = Faker(local)  # POE [*]
         self.fake = ArtemisFaker().Layers.ModelInterfaceLayer
-
 
         self.__reccntr = idx
         self.add_providers()
@@ -80,7 +81,7 @@ class Synthesizer(object):
         NOTE: Maybe add a global seed option?
         """
         if seed:
-            self.set_seed(seed) # Replace this [*]
+            self.set_seed(seed)  # Replace this [*]
 
         # Cache the generator functions once
         self.generator_fcns = {}
@@ -165,25 +166,33 @@ class Synthesizer(object):
         return id
 
     def set_seed(self, seed):
-        self.fake.seed(seed) # Swap this out [*]
+        self.fake.seed(seed)  # Swap this out [*]
 
     def add_providers(self):
         """
         Add custom providers
         """
-        klasses = [provider.Provider for provider in PROVIDERS] # I'm running on the understanding that this is an array of classses.
+        klasses = [
+            provider.Provider for provider in PROVIDERS]  # I'm running on the understanding that this is an array of classses.
         for k in klasses:
             if inspect.isclass(k):
-                pass
+                isfunction = False
+                isclass = True
             elif inspect.isfunction(k):
-                pass
-            elif isinstance(k, str):
-                pass
-            else:
+                isfunction = True
+                isclass = False
+            elif not isinstance(k, str):
                 raise TypeError
-            
-            self.fake.ModelInterface(k) # This is replaced with a different method. [*] <- We need to configure this to take in some details
-            # NOTE: Will want to configure a method to store multiple providers.
+
+            spec_faker = self.fake.ModelInterface(
+                seed=self.seed,
+                engine=k,
+                isfunction=isfunction,
+                isclass=isclass
+            )
+
+            spec_faker.custom_generator
+
 
     def get_field_parameters(self, in_parms):
         """
@@ -223,7 +232,8 @@ class Synthesizer(object):
                 fake = self.record_id
             else:
                 try:
-                    fake = self.fake.get_formatter(field.info.aux.generator.name) # Replace this, will need modification [*]
+                    # Replace this, will need modification [*]
+                    fake = self.fake.get_formatter(field.info.aux.generator.name)
                 except Exception:
                     self.__logger.error(
                         "Cannot find fake in Faker ", field.info.aux.generator.name

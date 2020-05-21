@@ -20,10 +20,11 @@ import inspect
 
 class ModelInterface():
 
-    def __init__(self, seed=False, engine=None):
+    def __init__(self, seed=False, engine=None, isfunction=False, isclass=False):
         self.seed = seed
+        self.kinds = (isfunction, isclass)
         if (engine is not None):
-            if isinstance(engine, str):
+            if not (isfunction or isclass):
                 if ("scipy" not in engine.lower()) and (not seed):
                     self.model = ipl.import_module(engine)
                 else:
@@ -33,7 +34,7 @@ class ModelInterface():
         else:
             raise ValueError
 
-    def custom_generator(self, method=None, function=False):
+    def custom_generator(self, method=None):
         """
         Method allowing importing external
         custom synthetic data generators.
@@ -41,7 +42,7 @@ class ModelInterface():
         within the custom generators.
         """
         # Set generator
-        if not function:
+        if (not self.kinds[0]) and (self.kinds[1]):
             generator = getattr(self.model, method)
 
                 # Set seed
@@ -52,7 +53,7 @@ class ModelInterface():
                 # Call generator with or without params
             self.generator = generator
 
-        else:
+        elif (self.kinds[0]) and (not self.kinds[1]):
             # Just skips over the entire setting process
             self.generator = self.model
 
