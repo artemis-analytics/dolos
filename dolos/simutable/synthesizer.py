@@ -23,6 +23,7 @@ import logging
 
 from pprint import pformat
 from faker import Faker
+import inspect
 
 #
 # from artemis_externals.physt.histogram1d import Histogram1D
@@ -55,6 +56,7 @@ class Synthesizer(object):
         """
         requires class model name
         """
+        self.provider_kinds = ["function", "class"]
 
         self.__logger.info("Synthesizer init")
         self.__logger.debug("DEBUG Message")
@@ -171,6 +173,15 @@ class Synthesizer(object):
         """
         klasses = [provider.Provider for provider in PROVIDERS] # I'm running on the understanding that this is an array of classses.
         for k in klasses:
+            if inspect.isclass(k):
+                pass
+            elif inspect.isfunction(k):
+                pass
+            elif isinstance(k, str):
+                pass
+            else:
+                raise TypeError
+            
             self.fake.ModelInterface(k) # This is replaced with a different method. [*] <- We need to configure this to take in some details
             # NOTE: Will want to configure a method to store multiple providers.
 
