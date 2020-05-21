@@ -59,11 +59,10 @@ class Synthesizer(object):
         """
         self.provider_kinds = ["function", "class"]
         self.inert_providers = []
-        
+
         self.__logger.info("Synthesizer init")
         self.__logger.debug("DEBUG Message")
 
-        self.fake = Faker(local)  # POE [*]
         self.fake = ArtemisFaker().Layers.ModelInterfaceLayer
 
         self.__reccntr = idx
@@ -80,9 +79,10 @@ class Synthesizer(object):
         TODO: Replace this entirely. Seeds are set on the record level.
         NOTE: Maybe add a global seed option?
         """
+        """
         if seed:
             self.set_seed(seed)  # Replace this [*]
-
+        """
         # Cache the generator functions once
         self.generator_fcns = {}
 
@@ -164,10 +164,12 @@ class Synthesizer(object):
     def record_id(self):
         id = "rec-" + str(self.record_count) + "-id"
         return id
-
+    
+    """
+    This method has been depricated and no longer works.
     def set_seed(self, seed):
         self.fake.seed(seed)  # Swap this out [*]
-
+    """
     def add_providers(self):
         """
         Add custom providers
@@ -175,6 +177,34 @@ class Synthesizer(object):
         klasses = [
             provider.Provider for provider in PROVIDERS]  # I'm running on the understanding that this is an array of classses.
         for k in klasses:
+            """
+            NOTE: Ok, now I will actually have to make
+            deeper changes. I'll actually preload some
+            of the modules in the loader method, then
+            from there I'll put the code in there.
+
+            THIS will let me register them, and I can use that
+            to produce the needed processes.
+
+            NOTE: Ryan, if you're reading this, these notes
+            don't entirely make sense, that's because they don't.
+
+            Much of this code will be migrated
+            to the Faker.py shim layer. I will
+            first, however, determine the needed
+            methods and processes. Once that is done,
+            it will be much easier to just migrate the 
+            code over to the shim layer.
+
+            Ideally, the shim layer will help enforce
+            modularity in the code, and allow changes to be made
+            to the Artemis Faker internal dependency, without
+            the need to make changes to Simutable. In sofar as the
+            hooks that Simutable uses behave the same, the changes
+            will be easy to implement.
+            """
+            # START SHIM CODE
+            
             if inspect.isclass(k):
                 isfunction = False
                 isclass = True
@@ -192,7 +222,9 @@ class Synthesizer(object):
             )
 
             spec_faker.custom_generator
-
+            # TODO: Get creative.
+            
+            #END SHIM CODE
 
     def get_field_parameters(self, in_parms):
         """
