@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+message GenerationParameters{
+    ModelConfiguration mod_conf = 1;
+    DataSchema schema = 2;
+}
+
+message ModelConfiguration{
+    string classname = 1;
+    string providername = 2;
+    repeated string generatable = 3;
+}
+
+message DataSchema{
+    repeated string field = 1;
+}
