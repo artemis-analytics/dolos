@@ -59,7 +59,10 @@ class Synthesizer(object):
         self.__logger.info("Synthesizer init")
         self.__logger.debug("DEBUG Message")
 
-        self.fake = Faker(local)
+        self.fake = Faker(local) # POE [*]
+        self.fake = ArtemisFaker()
+
+
         self.__reccntr = idx
         self.add_providers()
         self.schema = []
@@ -70,9 +73,12 @@ class Synthesizer(object):
                 self.is_dependent.append(False)
             else:
                 self.is_dependent.append(True)
-
+        """
+        TODO: Replace this entirely. Seeds are set on the record level.
+        NOTE: Maybe add a global seed option?
+        """
         if seed:
-            self.set_seed(seed)
+            self.set_seed(seed) # Replace this [*]
 
         # Cache the generator functions once
         self.generator_fcns = {}
@@ -157,7 +163,7 @@ class Synthesizer(object):
         return id
 
     def set_seed(self, seed):
-        self.fake.seed(seed)
+        self.fake.seed(seed) # Swap this out [*]
 
     def add_providers(self):
         """
@@ -165,7 +171,8 @@ class Synthesizer(object):
         """
         klasses = [provider.Provider for provider in PROVIDERS]
         for k in klasses:
-            self.fake.add_provider(k)
+            self.fake.add_provider(k) # This is replaced with a different method. [*] <- We need to configure this to take in some details
+            # NOTE: Will want to configure a method to store multiple providers.
 
     def get_field_parameters(self, in_parms):
         """
@@ -205,7 +212,7 @@ class Synthesizer(object):
                 fake = self.record_id
             else:
                 try:
-                    fake = self.fake.get_formatter(field.info.aux.generator.name)
+                    fake = self.fake.get_formatter(field.info.aux.generator.name) # Replace this, will need modification [*]
                 except Exception:
                     self.__logger.error(
                         "Cannot find fake in Faker ", field.info.aux.generator.name
