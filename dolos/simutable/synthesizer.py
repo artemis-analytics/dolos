@@ -31,7 +31,7 @@ from artemis_base.utils.logger import Logger
 
 from dolos.simutable.loader import PROVIDERS
 from dolos.simutable.febrlgen import Modifier
-
+import ArtemisFaker
 
 @Logger.logged
 class Synthesizer(object):
@@ -60,7 +60,7 @@ class Synthesizer(object):
         self.__logger.debug("DEBUG Message")
 
         self.fake = Faker(local) # POE [*]
-        self.fake = ArtemisFaker()
+        self.fake = ArtemisFaker().Layers.ModelInterfaceLayer
 
 
         self.__reccntr = idx
@@ -169,16 +169,16 @@ class Synthesizer(object):
         """
         Add custom providers
         """
-        klasses = [provider.Provider for provider in PROVIDERS]
+        klasses = [provider.Provider for provider in PROVIDERS] # I'm running on the understanding that this is an array of classses.
         for k in klasses:
-            self.fake.add_provider(k) # This is replaced with a different method. [*] <- We need to configure this to take in some details
+            self.fake.ModelInterface(k) # This is replaced with a different method. [*] <- We need to configure this to take in some details
             # NOTE: Will want to configure a method to store multiple providers.
 
     def get_field_parameters(self, in_parms):
         """
         Convert field parameters to/from a message to python type
         parameters which do not contain Fields
-        are converted to python type
+        are converted to python type.
         """
         if len(in_parms) == 0:
             return None

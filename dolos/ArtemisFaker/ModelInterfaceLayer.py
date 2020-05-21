@@ -16,21 +16,24 @@ limitations under the License.
 """
 
 import importlib as ipl
+import inspect
 
 class ModelInterface():
 
-    def __init__(self, seed=False, engine=None, params=False):
-        self.params = params
+    def __init__(self, seed=False, engine=None):
         self.seed = seed
         if (engine is not None):
-            if ("scipy" not in engine.lower()) and (not seed):
-                self.model = ipl.import_module(engine)
+            if isinstance(engine, str):
+                if ("scipy" not in engine.lower()) and (not seed):
+                    self.model = ipl.import_module(engine)
+                else:
+                    self.model = engine
             else:
                 self.model = engine
-        if params:
-            self.params = params
+        else:
+            raise ValueError
 
-    def custom_generator(self, method):
+    def custom_generator(self, method=None, function=False):
         """
         Method allowing importing external
         custom synthetic data generators.
@@ -38,18 +41,20 @@ class ModelInterface():
         within the custom generators.
         """
         # Set generator
-        generator = getattr(self.model, method)
+        if not function:
+            generator = getattr(self.model, method)
 
-        # Set seed
-        if self.seed:
-            set_seed = getattr(self.model, "set_seed")
-            set_seed(self.seed)
+                # Set seed
+            if self.seed:
+                set_seed = getattr(self.model, "set_seed")
+                set_seed(self.seed)
 
-        # Call generator with or without params
-        if self.params:
-            return generator(self.params)
-        elif not self.params:
-            return generator()
+                # Call generator with or without params
+            self.generator = generator
+
+        else:
+            # Just skips over the entire setting process
+            self.generator = self.model
 
     def numpy_generator(self, method):
         """
@@ -67,13 +72,13 @@ class ModelInterface():
         # Get the specific generator
         self.generator = getattr(model, method)
 
-    def generate_random(self):
+    def generate_random(self, params=None):
         """
         Factory method for returning
         the random number generator.
         """
         model = self.generator
-        params = self.params
+        params = params
         if params:
             return model(*params)
         else:
@@ -97,14 +102,14 @@ class ModelInterface():
         # Now instantiate the generator
         self.generator = getattr(model, method)
 
-    def generate_random_scipy(self, rvs=False):
+    def generate_random_scipy(self, params, rvs=False):
         # Call generator with
-        if self.params:
+        if params:
             if rvs:
-                return self.generator(*self.params).rvs()
+                return self.generator(*params).rvs()
             else:
-                return self.generator(*self.params)
-        elif not self.params:
+                return self.generator(*params)
+        elif not params:
             if rvs:
                 return self.generator().rvs()
             else:
