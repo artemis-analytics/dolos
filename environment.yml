@@ -24,5 +24,7 @@ dependencies:
     - protobuf
     - pyarrow
     - faker<3.0.0
+    - anaconda-client
+    - conda-build
     - artemis-format
     - artemis-base 
