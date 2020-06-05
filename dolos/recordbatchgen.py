@@ -79,6 +79,7 @@ class RecordBatchGenOptions:
 @Logger.logged
 class RecordBatchGen:
     """
+    Class is a record-generator
     """
 
     def __init__(self, name, **kwargs):
@@ -236,19 +237,20 @@ class RecordBatchGen:
         return self
 
     def initialize(self):
-        self.__logger.info("RecordBatchGenerator")
+        self.__logger.info("RecordBatchGenerator")  # Get the logger info
+        # Set the number of fields programmatically
         self.num_cols = len(self.table.info.schema.info.fields)
-        names = []
-        for field in self.table.info.schema.info.fields:
-            names.append(field.name)
-        self.header = names
+        names = []  # Field name array
+        for field in self.table.info.schema.info.fields:  # Iterate over the schema fields
+            names.append(field.name) # Push to array
+        self.header = names # Set the header as the names ? => Why not just use self.header?
 
-        if hasattr(self.properties, "seed"):
-            self.synthesizer = Synthesizer(
+        if hasattr(self.properties, "seed"): # Set the seed if there is a seed property
+            self.synthesizer = Synthesizer( # Initialize synthesizer with seeding
                 self.table, "en_CA", idx=0, seed=self.properties.seed
             )
         else:
-            self.synthesizer = Synthesizer(self.table, "en_CA", idx=0)
+            self.synthesizer = Synthesizer(self.table, "en_CA", idx=0) # Otherwise, intialize without seed
 
         if self.file_type == 1:
             self.write_batch = self.write_batch_csv

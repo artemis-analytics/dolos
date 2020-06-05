@@ -44,38 +44,46 @@ class RBGenTestCase(unittest.TestCase):
         print("================================================")
 
     def test_rbgen_csv(self):
-
+        """
+        This method generates a test
+        record batch as a CSV, and displays
+        the results to the console.
+        """
         # define the schema for the data
-        g_table = Table()
-        g_table.name = "EvolveModel"
-        g_table.uuid = str(uuid.uuid4())
-        schema = g_table.info.schema.info
-        field = schema.fields.add()
-        field.name = "Name"
-        field.info.type = "String"
-        field.info.length = 10
-        field.info.aux.generator.name = "name"
-        g_table_msg = g_table.SerializeToString()
+        g_table = Table()  # Define a table instance
+        g_table.name = "EvolveModel"  # Name the table
+        g_table.uuid = str(uuid.uuid4())  # Create a UUID
+        schema = g_table.info.schema.info  # Access the schema unit
+        field = schema.fields.add()  # Add a field
+        field.name = "Name"  # Set the field name
+        field.info.type = "String"  # Set the type of the field
+        field.info.length = 10  # Set the field length
+        # Set the generator name <<< We will need to change up this. We will need to pass generator AND the engine.
+        field.info.aux.generator.name = "name" # Generator name, we need to trace this
+        g_table_msg = g_table.SerializeToString() # Create a string instance of this
 
+        # This is the record batch generator
+        # All the configurations are set in the 
+        # generator to produce the output.
         generator = RecordBatchGen(
-            "generator",
-            nbatches=1,
-            num_rows=10000,
-            file_type=1,  # Encodes the data as csv
-            table_id=g_table.uuid,
-            table_msg=g_table_msg,
+            "generator", # Unknown parameter
+            nbatches=1, # Total number of batches that are used
+            num_rows=10000, # Total rows to be generated
+            file_type=1,  # Encodes the data as csv 
+            table_id=g_table.uuid, # Sets the table UUID
+            table_msg=g_table_msg, # Sets the table message
         )
 
-        generator.initialize()
+        generator.initialize() # Create the generator
         # Data returned as a pyarrow buffer
         # Convert to raw python bytes objects
         # Use io wrapper and read as csv
-        for batch in generator:
-            data = batch.to_pybytes()
-            with io.TextIOWrapper(io.BytesIO(data)) as textio:
-                for row in csv.reader(textio):
-                    print(row)
+        for batch in generator: # Generator is some kind of iterator
+            data = batch.to_pybytes() # Access the batch, convert to bytes
+            with io.TextIOWrapper(io.BytesIO(data)) as textio: # Create a 
+                for row in csv.reader(textio): # Spit out the row in the buffer
+                    print(row) # Print the row
 
 
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main() # Execute the unit tests
