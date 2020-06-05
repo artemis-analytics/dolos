@@ -237,27 +237,34 @@ class RecordBatchGen:
         return self
 
     def initialize(self):
+        # Behaves like a switch case controlling the writng method
+        method_switch = {
+            1:
+            self.write_batch_csv,
+            2:
+            self.write_batch_fwf,
+            5:
+            self.write_batch_arrow}
         self.__logger.info("RecordBatchGenerator")  # Get the logger info
         # Set the number of fields programmatically
         self.num_cols = len(self.table.info.schema.info.fields)
         names = []  # Field name array
         for field in self.table.info.schema.info.fields:  # Iterate over the schema fields
-            names.append(field.name) # Push to array
-        self.header = names # Set the header as the names ? => Why not just use self.header?
+            names.append(field.name)  # Push to array
+        self.header = names  # Set the header as the names
 
-        if hasattr(self.properties, "seed"): # Set the seed if there is a seed property
-            self.synthesizer = Synthesizer( # Initialize synthesizer with seeding
+        if hasattr(self.properties, "seed"):  # Set the seed if there is a seed property
+            self.synthesizer = Synthesizer(  # Initialize synthesizer with seeding
                 self.table, "en_CA", idx=0, seed=self.properties.seed
             )
         else:
-            self.synthesizer = Synthesizer(self.table, "en_CA", idx=0) # Otherwise, intialize without seed
+            # Otherwise, intialize without seed
+            self.synthesizer = Synthesizer(self.table, "en_CA", idx=0)
 
-        if self.file_type == 1:
-            self.write_batch = self.write_batch_csv
-        elif self.file_type == 2:
-            self.write_batch = self.write_batch_fwf
-        elif self.file_type == 5:
-            self.write_batch = self.write_batch_arrow
+        try:
+            self.write_batch = method_switch[self.file_type] # Handle specific filetypes
+        except KeyError:
+            self.__logger.info("RecordBatchGenerator: Filetype not 1, 2, or 5")
 
     def chunk(self):
         """
