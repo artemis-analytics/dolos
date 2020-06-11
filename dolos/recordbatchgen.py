@@ -256,11 +256,11 @@ class RecordBatchGen:
 
         if hasattr(self.properties, "seed"):  # Set the seed if there is a seed property
             self.synthesizer = Synthesizer(  # Initialize synthesizer with seeding
-                self.table, "en_CA", idx=0, seed=self.properties.seed
+                self.table, idx=0, seed=self.properties.seed
             )
         else:
             # Otherwise, intialize without seed
-            self.synthesizer = Synthesizer(self.table, "en_CA", idx=0)
+            self.synthesizer = Synthesizer(self.table, idx=0)
 
         try:
             # Handle specific filetypes
@@ -279,8 +279,9 @@ class RecordBatchGen:
             except TypeError:
                 self.__logger.error("Generator function must return list")
                 raise
-            except Exception:
+            except Exception as error:
                 self.__logger.error("Unknown error in chunk")
+                self.__logger.error(error)
 
     def fwf_encode_row(self, row):
         record = ""

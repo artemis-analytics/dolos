@@ -65,8 +65,8 @@ def create_fakers(live_modules):
     return fakers  # Return the values back to the program
 
 
-MODULE_CONFIG_LOCATION = "configs/modules.yaml"  # Path to the settings file
-MODULE_PATH = 'providers'  # Define the modules directory
+MODULE_CONFIG_LOCATION = "/home/terminal/Desktop/dolos/dolos/simutable/configs/modules.yaml"  # Path to the settings file
+MODULE_PATH = './providers'  # Define the modules directory
 # Take all the array contents from 1 -> len(x)
 MODULE_INFO = [dir for dir in os.walk(MODULE_PATH)][1:]
 # Array is created to load in the modules

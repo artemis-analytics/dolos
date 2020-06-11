@@ -22,7 +22,7 @@ Generates the data using faker
 import logging
 
 from pprint import pformat
-from faker import Faker
+from ArtemisFaker.Faker import ArtemisFaker as Faker
 
 #
 # from artemis_externals.physt.histogram1d import Histogram1D
@@ -51,7 +51,7 @@ class Synthesizer(object):
     # before seed is set. Needs to be investigated!
     """
 
-    def __init__(self, model, local, idx=0, seed=None):
+    def __init__(self, model, idx=0, seed=None):
         """
         requires class model name
         """
@@ -59,7 +59,7 @@ class Synthesizer(object):
         self.__logger.info("Synthesizer init")
         self.__logger.debug("DEBUG Message")
 
-        self.fake = Faker(local)  # First initialization of Faker
+        self.fake = Faker(seed)  # First initialization of Faker
         self.__reccntr = idx  # ?? Unknown variable
         self.add_providers()  # Add providers to the faker
         self.schema = []
@@ -70,9 +70,6 @@ class Synthesizer(object):
                 self.is_dependent.append(False)
             else:
                 self.is_dependent.append(True)
-
-        if seed:
-            self.set_seed(seed)
 
         # Cache the generator functions once
         self.generator_fcns = {}
@@ -156,9 +153,6 @@ class Synthesizer(object):
         id = "rec-" + str(self.record_count) + "-id"
         return id
 
-    def set_seed(self, seed):
-        self.fake.seed(seed)
-
     def _swap_numpy(self, module):
         """
         This method swaps out the numpy instance
@@ -171,7 +165,6 @@ class Synthesizer(object):
                 # TODO: Replace this with the correct variable
                 module.numpy = self.fake.numpy  # Swap out with the class's instance of numpy
         return module  # Return out the mutated module
-
 
     def add_providers(self):
         """
@@ -204,48 +197,45 @@ class Synthesizer(object):
         parameters which do not contain Fields
         are converted to python type
         """
-        if len(in_parms) == 0:
-            return None
+        if len(in_parms) == 0:  # Check if there are params
+            return None  # If that's the case, return None
 
-        values = []
-        is_msg = False
-        for parm in in_parms:
-            if parm.type == "Field":
-                is_msg = True
-                continue
-            _type = eval(parm.type)
-            value = _type(parm.value)
-            values.append(value)
-        if is_msg is True:
-            return in_parms
-        elif len(values) == 1:
-            return values[-1]
-        else:
-            return values
+        values = []  # Empty values
+        is_msg = False  # Check if the param is a message
+        for parm in in_parms:  # Loop over params
+            if parm.type == "Field":  # If it is a message
+                is_msg = True  # Set is_message to true
+                continue  # Go to top of loop
+            _type = eval(parm.type)  # create a type object
+            value = _type(parm.value)  # Create the value, and cast it to the type
+            values.append(value)  # Add that into the parameters
+        if is_msg is True:  # check if is a message
+            return in_parms  # Return input params
+        elif len(values) == 1:  # If there is only one element
+            return values[-1]  # Return just that element
+        else:  # Otherwise
+            return values  # Return the params
 
     def set_generators_from_proto(self, table):
-        self.__logger.info("Setting Generator functions from Msg")
-        for field in table.info.schema.info.fields:
+        """
+        This method sets the generators from a 
+        protocol buffer. This does... not sure yet
+        """
+        self.__logger.info("Setting Generator functions from Msg")  # Let us know
+        for field in table.info.schema.info.fields:  # Iterate over the fields in the proto
+            # Let us know what field is being accessed
             self.__logger.info("Gathering fakers %s", field.name)
-            if field.info.aux.dependent != "":
-                continue
-            self.__logger.info("Independent field %s", field)
-            parms = self.get_field_parameters(field.info.aux.generator.parameters)
-            fake = None
-            if field.name == "record_id":
-                fake = self.record_id
-            else:
-                try:
-                    fake = self.fake.get_formatter(field.info.aux.generator.name)
-                except Exception:
-                    self.__logger.error(
-                        "Cannot find fake in Faker ", field.info.aux.generator.name
-                    )
-
-            self.generator_fcns[field.name] = (fake, parms)
-            self.__logger.debug(parms)
-            self.__logger.debug(fake)
-            self.__logger.debug(self.generator_fcns[field.name])
+            if field.info.aux.dependent != "":  # If the aux.dependent field is empty
+                continue  # Goto the top of the loop if the above is the case
+            self.__logger.info("Independent field %s", field)  # Getting the field
+            # Get the parameters out of the generator
+            parms = self.get_field_parameters(
+                field.info.aux.generator.parameters)  # Grab our params
+            # Load this data into the system, associate field with params and generator
+            self.generator_fcns[field.name] = (field.info.aux.generator.name, parms)
+            self.__logger.debug(parms)  # Tell us
+            self.__logger.debug(field.info.aux.generator.name)  # Tell us
+            self.__logger.debug(self.generator_fcns[field.name])  # Tell us
 
     def generate_duplicate_pdf(self):
         """
@@ -270,29 +260,38 @@ class Synthesizer(object):
         self._original = darr
 
     def reset_original(self):
-        self._original = []
+        """
+        Setter method for original
+        """
+        self._original = []  # Empty out self._originals
 
     def generate_original(self):
-        fakers = self.schema
-        self.reset_original()
-        self.__logger.debug("generate_original()")
-        self.__logger.debug("Event ID %d" % self.record_count)
-        darr = []
-        for i, fake in enumerate(fakers):
-            if self.is_dependent[i] is True:
-                continue
-            if self.generator_fcns[fake][1] is None:
-                value = self.generator_fcns[fake][0]()
-                darr.append(value)
-            else:
-                value = self.generator_fcns[fake][0](self.generator_fcns[fake][1])
-                if isinstance(value, list):
-                    darr.extend(value)
-                else:
-                    darr.append(value)
-        self.record_counter()
-        self.cache_original(darr)
-        return darr
+        """
+        Create an orriginal record.
+        """
+        fakers = self.schema  # Get the schema; Not sure what this is
+        self.reset_original()  # Set the self._original value to be empty
+        self.__logger.debug("generate_original()")  # Let us know
+        self.__logger.debug("Event ID %d" % self.record_count)  # Let us know
+        print(self.fake.are_avilable)
+        darr = []  # Data array
+        for i, fake in enumerate(fakers):  # Enumerate the fakers
+            if self.is_dependent[i] is True:  # Skip over if there is a dependent
+                continue  # Skipper
+            if self.generator_fcns[fake][1] is None:  # Check if there are params
+                value = self.fake.fake(
+                    self.generator_fcns[fake][0], params=None)  # Create fake datum
+                darr.append(value)  # Append the data to the list
+            else: # If there are
+                value = self.fake.fake(
+                    self.generator_fcns[fake][0], self.generator_fcns[fake][1])  # Create fake datu
+            if isinstance(value, list): # If it is a list
+                darr.extend(value) # Extend
+            else: # Otherwise
+                darr.append(value) # Just append the value
+        self.record_counter() # Count the number of records
+        self.cache_original(darr) # Cache the results
+        return darr # Return the data array
 
     def duplicate_original(self):
         darr = []

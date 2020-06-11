@@ -57,7 +57,7 @@ class RBGenTestCase(unittest.TestCase):
         field.info.type = "String"  # Set the type of the field
         field.info.length = 10  # Set the field length
         # Set the generator name <<< We will need to change up this. We will need to pass generator AND the engine.
-        field.info.aux.generator.name = "name" # Generator name, we need to trace this
+        field.info.aux.generator.name = "uniform" # Generator name, we need to trace this
         g_table_msg = g_table.SerializeToString() # Create a string instance of this
 
         # This is the record batch generator

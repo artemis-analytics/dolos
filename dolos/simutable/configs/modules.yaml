@@ -17,11 +17,11 @@
 # limitations under the License.
 
 # Contains names of modules that are not in the modules folder
-- numpy:
-    module: random
+- numpy: # Numpy
+    module: random # numpy.random
     methods:  
-      - "normal"
+      - "normal" # Normal method
 - scipy:
-    module: stats
+    module: stats # scipy.stats
     methods:
-      - "uniform"
+      - "uniform" # Uniform method
