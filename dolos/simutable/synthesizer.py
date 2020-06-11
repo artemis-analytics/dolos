@@ -59,9 +59,9 @@ class Synthesizer(object):
         self.__logger.info("Synthesizer init")
         self.__logger.debug("DEBUG Message")
 
-        self.fake = Faker(local)
-        self.__reccntr = idx
-        self.add_providers()
+        self.fake = Faker(local)  # First initialization of Faker
+        self.__reccntr = idx  # ?? Unknown variable
+        self.add_providers()  # Add providers to the faker
         self.schema = []
         self.is_dependent = []
         for field in model.info.schema.info.fields:
@@ -159,11 +159,42 @@ class Synthesizer(object):
     def set_seed(self, seed):
         self.fake.seed(seed)
 
+    def _swap_numpy(self, module):
+        """
+        This method swaps out the numpy instance
+        in the module, should it have one, to the
+        one in the fake instance we have here.
+        """
+        # Check to make sure this is not one of the string options from the YAML
+        if not isinstance(module, str):
+            if hasattr(module, 'numpy'):  # Check if it has a self.numpy object
+                # TODO: Replace this with the correct variable
+                module.numpy = self.fake.numpy  # Swap out with the class's instance of numpy
+        return module  # Return out the mutated module
+
+
     def add_providers(self):
         """
-        Add custom providers
+        This method injects in the
+        providers to the faker instance.
         """
-        klasses = [provider.Provider for provider in PROVIDERS]
+        str_providers = PROVIDERS[0]  # Providers, called by name
+        live_providers = PROVIDERS[1]  # Providers, provided as a live module
+        for providers in PROVIDERS:  # Iterate over the types of providers
+            for provider in providers:  # Iterate over all the methods
+                # Inject those into faker, and swap the numpy instance
+                self.fake.add_faker(self._swap_numpy(provider[0]), provider[1])
+
+    def add_providers_deped(self):
+        """
+        Add custom providers,
+        Now depricated to to allow
+        for the injection of the new
+        methods.
+        """
+        # This gives direct access to the module's main class called Provider.
+        klasses = [
+            provider.Provider for provider in PROVIDERS]  # Accessing the PROVIDERS. Check this method out, see how it operates.
         for k in klasses:
             self.fake.add_provider(k)
 

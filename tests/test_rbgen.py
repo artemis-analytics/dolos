@@ -33,9 +33,7 @@ from artemis_format.pymodels.table_pb2 import Table
 from artemis_format.pymodels.cronus_pb2 import TableObjectInfo
 from dolos.recordbatchgen import RecordBatchGen
 
-
 logging.getLogger().setLevel(logging.INFO)
-
 
 class RBGenTestCase(unittest.TestCase):
     def setUp(self):

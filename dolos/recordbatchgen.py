@@ -245,6 +245,7 @@ class RecordBatchGen:
             self.write_batch_fwf,
             5:
             self.write_batch_arrow}
+
         self.__logger.info("RecordBatchGenerator")  # Get the logger info
         # Set the number of fields programmatically
         self.num_cols = len(self.table.info.schema.info.fields)
@@ -262,8 +263,10 @@ class RecordBatchGen:
             self.synthesizer = Synthesizer(self.table, "en_CA", idx=0)
 
         try:
-            self.write_batch = method_switch[self.file_type] # Handle specific filetypes
+            # Handle specific filetypes
+            self.write_batch = method_switch[self.file_type]
         except KeyError:
+            # Alert that this process did not execute
             self.__logger.info("RecordBatchGenerator: Filetype not 1, 2, or 5")
 
     def chunk(self):

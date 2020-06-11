@@ -22,63 +22,28 @@
 """
 from importlib import import_module
 import os
-import sys
-import pkgutil
 
 
-def get_path(module):
-    if getattr(sys, "frozen", False):
-        path = os.path.dirname(sys.executable)
-    else:
-        path = os.path.dirname(os.path.realpath(module.__file__))
-    return path
+def create_fakers(live_modules):
+    """
+    This method takes the live methods,
+    and extracts the describe property 
+    from them.
+    """
+    fakers = set()  # This is our set
+    for module in live_modules:  # Iterate over all the live modules
+        # Add the provider, as well as the describer to the set
+        fakers.add((module.Provider(), module.Provider().describe))
+    return fakers # Return the values back to the program
 
 
-def list_module(module):
-    path = get_path(module)
-    modules = [name for finder, name, is_pkg in pkgutil.iter_modules([path]) if is_pkg]
-    return modules
+MODULE_PATH = 'modules'  # Define the modules directory
+# Take all the array contents from 1 -> len(x)
+MODULE_INFO = [dir for dir in os.walk(MODULE_PATH)][1:]
+# Array is created to load in the modules
+LIVE_MODULES = [import_module(module[0].replace("/", "."))
+                for module in MODULE_INFO if "__pycache__" not in module[0]]  # Process them so long as they are not the pycache
 
 
-def find_available_providers(modules):
-    available_providers = set()
-    for prvdrs_mod in modules:
-        prvdrs = [
-            ".".join([prvdrs_mod.__package__, mod])
-            for mod in list_module(prvdrs_mod)
-            if mod != "__pycache__"
-        ]
-    available_providers.update(prvdrs)
-    return sorted(available_providers)
-
-
-META_PROVIDERS_MODULES = [
-    "dolos.simutable.providers",
-]
-
-PROVIDER_MODULES = find_available_providers(
-    [import_module(path) for path in META_PROVIDERS_MODULES]
-)
-
-PROVIDERS = [import_module(module) for module in PROVIDER_MODULES]
-
-
-# Return a list of generator functions from simutable/provider
-def local_providers():
-    provider_names = []
-    for provider in PROVIDERS:
-        provider_names.extend(
-            [x for x in dir(provider.Provider) if not x.startswith("_")]
-        )
-    return list(dict.fromkeys(provider_names))
-
-
-# Return a list of generator functions from Faker
-def faker_providers():
-    from faker import Faker
-
-    faker = Faker("en_CA")
-    provider_names = []
-    for provider in faker.providers:
-        provider_names.extend([x for x in dir(provider) if not x.startswith("_")])
-    return list(dict.fromkeys(provider_names))
+# This is the provider set that we use in simutable
+PROVIDERS = create_fakers(LIVE_MODULES)
