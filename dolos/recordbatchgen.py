@@ -410,6 +410,5 @@ class RecordBatchGen:
         next(self._batch_iter)
         self.__logger.info("%s: Generating datum " % (self.__class__.__name__))
         data = self.write_batch()
-
         self._batchidx += 1
         return data

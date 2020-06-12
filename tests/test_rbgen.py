@@ -54,10 +54,18 @@ class RBGenTestCase(unittest.TestCase):
         schema = g_table.info.schema.info  # Access the schema unit
         field = schema.fields.add()  # Add a field
         field.name = "Name"  # Set the field name
-        field.info.type = "String"  # Set the type of the field
+        field.info.type = "float"  # Set the type of the field
         field.info.length = 10  # Set the field length
         # Set the generator name <<< We will need to change up this. We will need to pass generator AND the engine.
-        field.info.aux.generator.name = "uniform" # Generator name, we need to trace this
+        field.info.aux.generator.name = "normal" # Generator name, we need to trace this
+        params = field.info.aux.generator.parameters.add()
+        params.name = "Mean"
+        params.value = 3
+        params.type = "int"
+        params2 = field.info.aux.generator.parameters.add()
+        params2.name = "STD"
+        params2.value = 3
+        params2.type = "int"
         g_table_msg = g_table.SerializeToString() # Create a string instance of this
 
         # This is the record batch generator
@@ -78,7 +86,7 @@ class RBGenTestCase(unittest.TestCase):
         # Use io wrapper and read as csv
         for batch in generator: # Generator is some kind of iterator
             data = batch.to_pybytes() # Access the batch, convert to bytes
-            with io.TextIOWrapper(io.BytesIO(data)) as textio: # Create a 
+            with io.TextIOWrapper(io.BytesIO(data)) as textio: # Create a text output, this turns it into a string
                 for row in csv.reader(textio): # Spit out the row in the buffer
                     print(row) # Print the row
 
