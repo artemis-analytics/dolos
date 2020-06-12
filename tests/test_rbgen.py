@@ -66,11 +66,11 @@ class RBGenTestCase(unittest.TestCase):
         params.name = "Mean"
         params.value = 3
         params.type = "int"
+        """
         params2 = field.info.aux.generator.parameters.add()
         params2.name = "STD"
         params2.value = 3
         params2.type = "int"
-        """
         g_table_msg = g_table.SerializeToString()  # Create a string instance of this
 
         # This is the record batch generator
