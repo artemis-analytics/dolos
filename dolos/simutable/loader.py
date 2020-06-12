@@ -22,7 +22,6 @@ import yaml
 import sys
 import os
 
-
 def get_configs(location):
     """
     This method takes in a

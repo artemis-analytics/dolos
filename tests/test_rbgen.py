@@ -57,20 +57,19 @@ class RBGenTestCase(unittest.TestCase):
         field.name = "Name"  # Set the field name
         field.info.type = "float"  # Set the type of the field
         field.info.length = 10  # Set the field length
-        # Set the generator name <<< We will need to change up this. We will need to pass generator AND the engine.
-        field.info.aux.generator.name = "name"  # Generator name, we need to trace this
-        
-        # We're adding in the parameters here. These mimic the tests that are found in the ArtemisFaker module itself
+        field.info.aux.generator.name = "normal"  # Generator name, we need to trace this
         """
+        # We're adding in the parameters here. These mimic the tests that are found in the ArtemisFaker module itself
         params = field.info.aux.generator.parameters.add()
         params.name = "Mean"
         params.value = 3
         params.type = "int"
-        """
+
         params2 = field.info.aux.generator.parameters.add()
         params2.name = "STD"
         params2.value = 3
         params2.type = "int"
+        """
         g_table_msg = g_table.SerializeToString()  # Create a string instance of this
 
         # This is the record batch generator
@@ -79,7 +78,7 @@ class RBGenTestCase(unittest.TestCase):
         generator = RecordBatchGen(
             "generator",  # Unknown parameter
             nbatches=1,  # Total number of batches that are used
-            num_rows=10000,  # Total rows to be generated
+            num_rows=10,  # Total rows to be generated
             file_type=1,  # Encodes the data as csv
             table_id=g_table.uuid,  # Sets the table UUID
             table_msg=g_table_msg,  # Sets the table message
@@ -94,7 +93,7 @@ class RBGenTestCase(unittest.TestCase):
             # Create a text output, this turns it into a string
             with io.TextIOWrapper(io.BytesIO(data)) as textio:
                 for row in csv.reader(textio):  # Spit out the row in the buffer
-                    print(row)
+                    print(row)  # Print the row
 
 
 if __name__ == "__main__":

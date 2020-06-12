@@ -286,13 +286,15 @@ class Synthesizer(object):
             else: # If there are
                 self.__logger.info(self.generator_fcns[fake][1])
                 value = self.fake.fake(
-                    self.generator_fcns[fake][0], self.generator_fcns[fake][1])  # Create fake datu
+                    self.generator_fcns[fake][0], self.generator_fcns[fake][1])  # Create fake datum
             if isinstance(value, list): # If it is a list
                 darr.extend(value) # Extend
             else: # Otherwise
-                darr.append(value) # Just append the value
+                if value not in darr:
+                    darr.append(value) # Just append the value
         self.record_counter() # Count the number of records
         self.cache_original(darr) # Cache the results
+        print(darr)
         return darr # Return the data array
 
     def duplicate_original(self):
