@@ -283,6 +283,7 @@ class Synthesizer(object):
                     self.generator_fcns[fake][0], params=None)  # Create fake datum
                 darr.append(value)  # Append the data to the list
             else: # If there are
+                self.__logger.info(self.generator_fcns[fake][1])
                 value = self.fake.fake(
                     self.generator_fcns[fake][0], self.generator_fcns[fake][1])  # Create fake datu
             if isinstance(value, list): # If it is a list

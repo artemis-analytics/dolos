@@ -57,7 +57,7 @@ class RBGenTestCase(unittest.TestCase):
         field.info.type = "float"  # Set the type of the field
         field.info.length = 10  # Set the field length
         # Set the generator name <<< We will need to change up this. We will need to pass generator AND the engine.
-        field.info.aux.generator.name = "normal" # Generator name, we need to trace this
+        field.info.aux.generator.name = "uniform" # Generator name, we need to trace this
         params = field.info.aux.generator.parameters.add()
         params.name = "Mean"
         params.value = 3
