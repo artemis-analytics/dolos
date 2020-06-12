@@ -24,6 +24,7 @@ def main():
         author_email="ryan.white4@canada.ca",
         packages=find_packages(exclude=["docs", "tests", "docs.*", "tests.*"]),
         install_requires=[],
+        package_data={"":['*.yaml']},
         description="Data Synthesis Framework for the Artemis Ecosystem",
     )
 

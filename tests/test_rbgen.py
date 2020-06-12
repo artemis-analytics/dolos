@@ -35,6 +35,7 @@ from dolos.recordbatchgen import RecordBatchGen
 
 logging.getLogger().setLevel(logging.INFO)
 
+
 class RBGenTestCase(unittest.TestCase):
     def setUp(self):
         print("================================================")
@@ -57,7 +58,10 @@ class RBGenTestCase(unittest.TestCase):
         field.info.type = "float"  # Set the type of the field
         field.info.length = 10  # Set the field length
         # Set the generator name <<< We will need to change up this. We will need to pass generator AND the engine.
-        field.info.aux.generator.name = "uniform" # Generator name, we need to trace this
+        field.info.aux.generator.name = "name"  # Generator name, we need to trace this
+        
+        # We're adding in the parameters here. These mimic the tests that are found in the ArtemisFaker module itself
+        """
         params = field.info.aux.generator.parameters.add()
         params.name = "Mean"
         params.value = 3
@@ -66,30 +70,32 @@ class RBGenTestCase(unittest.TestCase):
         params2.name = "STD"
         params2.value = 3
         params2.type = "int"
-        g_table_msg = g_table.SerializeToString() # Create a string instance of this
+        """
+        g_table_msg = g_table.SerializeToString()  # Create a string instance of this
 
         # This is the record batch generator
-        # All the configurations are set in the 
+        # All the configurations are set in the
         # generator to produce the output.
         generator = RecordBatchGen(
-            "generator", # Unknown parameter
-            nbatches=1, # Total number of batches that are used
-            num_rows=10000, # Total rows to be generated
-            file_type=1,  # Encodes the data as csv 
-            table_id=g_table.uuid, # Sets the table UUID
-            table_msg=g_table_msg, # Sets the table message
+            "generator",  # Unknown parameter
+            nbatches=1,  # Total number of batches that are used
+            num_rows=10000,  # Total rows to be generated
+            file_type=1,  # Encodes the data as csv
+            table_id=g_table.uuid,  # Sets the table UUID
+            table_msg=g_table_msg,  # Sets the table message
         )
 
-        generator.initialize() # Create the generator
+        generator.initialize()  # Create the generator
         # Data returned as a pyarrow buffer
         # Convert to raw python bytes objects
         # Use io wrapper and read as csv
-        for batch in generator: # Generator is some kind of iterator
-            data = batch.to_pybytes() # Access the batch, convert to bytes
-            with io.TextIOWrapper(io.BytesIO(data)) as textio: # Create a text output, this turns it into a string
-                for row in csv.reader(textio): # Spit out the row in the buffer
-                    print(row) # Print the row
+        for batch in generator:  # Generator is some kind of iterator
+            data = batch.to_pybytes()  # Access the batch, convert to bytes
+            # Create a text output, this turns it into a string
+            with io.TextIOWrapper(io.BytesIO(data)) as textio:
+                for row in csv.reader(textio):  # Spit out the row in the buffer
+                    print(row)
 
 
 if __name__ == "__main__":
-    unittest.main() # Execute the unit tests
+    unittest.main()  # Execute the unit tests

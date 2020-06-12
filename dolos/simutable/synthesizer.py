@@ -173,9 +173,11 @@ class Synthesizer(object):
         """
         str_providers = PROVIDERS[0]  # Providers, called by name
         live_providers = PROVIDERS[1]  # Providers, provided as a live module
+        print(PROVIDERS)
         for providers in PROVIDERS:  # Iterate over the types of providers
             for provider in providers:  # Iterate over all the methods
                 # Inject those into faker, and swap the numpy instance
+                print(provider)
                 self.fake.add_faker(self._swap_numpy(provider[0]), provider[1])
 
     def add_providers_deped(self):
@@ -273,7 +275,6 @@ class Synthesizer(object):
         self.reset_original()  # Set the self._original value to be empty
         self.__logger.debug("generate_original()")  # Let us know
         self.__logger.debug("Event ID %d" % self.record_count)  # Let us know
-        print(self.fake.are_avilable)
         darr = []  # Data array
         for i, fake in enumerate(fakers):  # Enumerate the fakers
             if self.is_dependent[i] is True:  # Skip over if there is a dependent

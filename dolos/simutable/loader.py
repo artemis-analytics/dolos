@@ -19,6 +19,7 @@
 
 from importlib import import_module
 import yaml
+import sys
 import os
 
 
@@ -31,7 +32,8 @@ def get_configs(location):
     and injects those into this system.
     """
     with open(location, 'r') as raw_file:  # Open up the location of the yaml file
-        existant_methods = yaml.load(raw_file,Loader=yaml.FullLoader)  # Load in that data
+        existant_methods = yaml.load(
+            raw_file, Loader=yaml.FullLoader)  # Load in that data
     return existant_methods  # Return out the date to the program
 
 
@@ -65,12 +67,28 @@ def create_fakers(live_modules):
     return fakers  # Return the values back to the program
 
 
-MODULE_CONFIG_LOCATION = "/home/terminal/Desktop/dolos/dolos/simutable/configs/modules.yaml"  # Path to the settings file
-MODULE_PATH = './providers'  # Define the modules directory
+def create_import(module):
+    """
+    This function creates the 
+    import path for the modules.
+
+    This was originally a demented list-comp
+    """
+    prefix = __name__.split(".")  # get the name of the module
+    prefix = prefix[:-1]  # Access everything but the path of this module
+    prefix = ".".join(prefix) # Create a new string from that list
+    provider = module[0].split("/")[-1] # Split the name of the module and grab just the name
+    return "%s.providers.%s" % (prefix, provider)
+
+MODULE_DIR = os.path.dirname(__file__)
+
+MODULE_CONFIG_LOCATION = MODULE_DIR+"/configs/modules.yaml"  # Path to the settings file
+MODULE_PATH = MODULE_DIR+'/providers'  # Define the modules directory
 # Take all the array contents from 1 -> len(x)
 MODULE_INFO = [dir for dir in os.walk(MODULE_PATH)][1:]
+print(__name__)
 # Array is created to load in the modules
-LIVE_MODULES = [import_module(module[0].replace("/", "."))
+LIVE_MODULES = [import_module(create_import(module))
                 for module in MODULE_INFO if "__pycache__" not in module[0]]  # Process them so long as they are not the pycache
 # Array contains modules named in the YAML file, we'll need to load these in sepperately
 STRING_MODULES = get_modules_from_configs(get_configs(MODULE_CONFIG_LOCATION))
