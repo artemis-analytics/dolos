@@ -22,7 +22,7 @@ Generates the data using faker
 import logging
 
 from pprint import pformat
-from ArtemisFaker.Faker import ArtemisFaker as Faker
+from dolos.ArtemisFaker.Faker import ArtemisFaker as Faker
 
 #
 # from artemis_externals.physt.histogram1d import Histogram1D
@@ -173,11 +173,9 @@ class Synthesizer(object):
         """
         str_providers = PROVIDERS[0]  # Providers, called by name
         live_providers = PROVIDERS[1]  # Providers, provided as a live module
-        print(PROVIDERS)
         for providers in PROVIDERS:  # Iterate over the types of providers
             for provider in providers:  # Iterate over all the methods
                 # Inject those into faker, and swap the numpy instance
-                print(provider)
                 self.fake.add_faker(self._swap_numpy(provider[0]), provider[1])
 
     def add_providers_deped(self):
@@ -294,7 +292,6 @@ class Synthesizer(object):
                     darr.append(value) # Just append the value
         self.record_counter() # Count the number of records
         self.cache_original(darr) # Cache the results
-        print(darr)
         return darr # Return the data array
 
     def duplicate_original(self):

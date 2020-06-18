@@ -53,11 +53,13 @@ class RBGenTestCase(unittest.TestCase):
         g_table.name = "EvolveModel"  # Name the table
         g_table.uuid = str(uuid.uuid4())  # Create a UUID
         schema = g_table.info.schema.info  # Access the schema unit
+
         field = schema.fields.add()  # Add a field
         field.name = "Name"  # Set the field name
         field.info.type = "float"  # Set the type of the field
         field.info.length = 10  # Set the field length
         field.info.aux.generator.name = "normal"  # Generator name, we need to trace this
+        
         """
         # We're adding in the parameters here. These mimic the tests that are found in the ArtemisFaker module itself
         params = field.info.aux.generator.parameters.add()
