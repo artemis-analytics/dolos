@@ -59,7 +59,7 @@ class SynthesizerTestCase(unittest.TestCase):
         field.info.length = 10
         field.info.aux.generator.name = "name"
 
-        s2 = Synthesizer(model, "en_CA", idx=0, seed=4053)
+        s2 = Synthesizer(model,   seed=4053)
         print(s2.generate())
 
     def test_glm_proto(self):
@@ -112,7 +112,7 @@ class SynthesizerTestCase(unittest.TestCase):
         var2.type = "Field"
         var2.variable.CopyFrom(field2)
 
-        s2 = Synthesizer(model, "en_CA")
+        s2 = Synthesizer(model)
         print(s2.generate())
 
     def test_xduplicates(self):
@@ -146,7 +146,7 @@ class SynthesizerTestCase(unittest.TestCase):
         parm.value = 13
         parm.type = "int"
 
-        s2 = Synthesizer(model, "en_CA", idx=0, seed=4053)
+        s2 = Synthesizer(model,   seed=4053)
         print(s2.generate())
 
     def test_xmodifer(self):
@@ -256,7 +256,7 @@ class SynthesizerTestCase(unittest.TestCase):
         prob2.merge = 0.1  # merge a field
         prob2.nullify = 0.1  # convert to null
         prob2.fill = 0.1  # fill empty field with expected type
-        s2 = Synthesizer(model, "en_CA", idx=0, seed=4053)
+        s2 = Synthesizer(model,   seed=4053)
         protorows = []
         for _ in range(10):
             protorows.append(s2.generate())
