@@ -1,7 +1,7 @@
 import numpy.random as random  # Random number genreator Numpy
 from importlib import import_module  # Import module
-from ArtemisFaker.MethodHelpers import MethodHandler  # Get the method helpers
-from ArtemisFaker.ModelHelpers import ModelInterface  # Get the model helpers
+from dolos.ArtemisFaker.MethodHelpers import MethodHandler  # Get the method helpers
+from dolos.ArtemisFaker.ModelHelpers import ModelInterface  # Get the model helpers
 
 class ArtemisFaker(MethodHandler):
 
